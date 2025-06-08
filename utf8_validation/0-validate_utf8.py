@@ -1,31 +1,30 @@
 #!/usr/bin/python3
+"""
+validUTF8
+"""
 
-def valid_utf8(data):
-    n_bytes = 0
+
+def validUTF8(data):
+    """Determines if a given data set represents a valid UTF-8 encoding"""
+    bytes = 0
 
     for num in data:
-        # Keep only the last 8 bits of the integer (simulate byte)
-        byte = num & 0xFF
-
-        if n_bytes == 0:
-            # Count the number of leading 1's
-            mask = 0b10000000
-            while mask & byte:
-                n_bytes += 1
-                mask >>= 1
-
-            # 1 byte character
-            if n_bytes == 0:
-                continue
-
-            # Invalid scenarios: more than 4 bytes or just 1 leading 1
-            if n_bytes == 1 or n_bytes > 4:
+        num = num & 0xFF
+        if 191 >= num >= 128:
+            if not bytes:
                 return False
+            bytes -= 1
         else:
-            # Continuation byte must start with 10xxxxxx
-            if not (byte & 0b10000000 and not (byte & 0b01000000)):
+            if bytes:
                 return False
-
-        n_bytes = n_bytes - 1 if n_bytes else 0
-
-    return n_bytes == 0
+            if num < 128:
+                continue
+            elif num < 224:
+                bytes = 1
+            elif num < 240:
+                bytes = 2
+            elif num < 248:
+                bytes = 3
+            else:
+                return False
+    return bytes == 0

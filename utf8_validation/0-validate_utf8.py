@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 def valid_utf8(data):
     n_bytes = 0
 

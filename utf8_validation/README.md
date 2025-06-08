@@ -1,0 +1,1 @@
+pour la faire simple on creer une booléenne qui verifie si la suite de valeur correspond a une technique UTF8

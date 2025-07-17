@@ -1,49 +1,36 @@
 #!/usr/bin/node
+const https = require('https');
 
-const request = require('request');
 const movieId = process.argv[2];
 if (!movieId) {
-  console.error('Usage: ./0-starwars_characters.js <Movie ID>');
+  console.error('Usage: ./0-starwars_characters.js <movie_id>');
   process.exit(1);
 }
-const apiUrl = `https://swapi-api.alx-tools.com/api/films/${movieId}/`;
-request(apiUrl, (error, response, body) => {
-  if (error) {
-    console.error('Error fetching data:', error);
-    return;
-  }
 
-  if (response.statusCode !== 200) {
-    console.error(`Error: Received status code ${response.statusCode}`);
-    return;
-  }
+const filmUrl = `https://swapi-api.hbtn.io/api/films/${movieId}/`;
 
-  const filmData = JSON.parse(body);
-  const characters = filmData.characters;
-  const fetchCharacterName = (url, callback) => {
-    request(url, (err, res, charBody) => {
-      if (err) {
-        callback(err, null);
-        return;
-      }
-      const charData = JSON.parse(charBody);
-      callback(null, charData.name);
-    });
-  };
+https.get(filmUrl, (res) => {
+  let data = '';
 
-  const printCharacters = (index) => {
-    if (index >= characters.length) {
-      return;
+  res.on('data', (chunk) => { data += chunk; });
+  res.on('end', async () => {
+    const film = JSON.parse(data);
+    const characters = film.characters;
+
+    for (const url of characters) {
+      await new Promise((resolve) => {
+        https.get(url, (res) => {
+          let characterData = '';
+          res.on('data', (chunk) => { characterData += chunk; });
+          res.on('end', () => {
+            const character = JSON.parse(characterData);
+            console.log(character.name);
+            resolve();
+          });
+        });
+      });
     }
-    fetchCharacterName(characters[index], (err, name) => {
-      if (err) {
-        console.error('Error fetching character:', err);
-      } else {
-        console.log(name);
-        printCharacters(index + 1);
-      }
-    });
-  };
-
-  printCharacters(0);
+  });
+}).on('error', (err) => {
+  console.error(`Error: ${err.message}`);
 });

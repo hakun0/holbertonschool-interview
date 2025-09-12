@@ -30,5 +30,5 @@ void menger(int level)
 			printf("%c", s);
 		}
 		printf("\n");
-	}
+    	}
 }

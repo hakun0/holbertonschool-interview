@@ -1,5 +1,6 @@
 #!/usr/bin/node
-const https = require('https');
+
+const request = require('request');
 
 const movieId = process.argv[2];
 if (!movieId) {
@@ -7,30 +8,37 @@ if (!movieId) {
   process.exit(1);
 }
 
-const filmUrl = `https://swapi-api.hbtn.io/api/films/${movieId}/`;
+const apiUrl = `https://swapi-api.alx-tools.com/api/films/${movieId}/`;
 
-https.get(filmUrl, (res) => {
-  let data = '';
+request(apiUrl, (error, response, body) => {
+  if (error) {
+    console.error(error);
+    return;
+  }
 
-  res.on('data', (chunk) => { data += chunk; });
-  res.on('end', async () => {
-    const film = JSON.parse(data);
-    const characters = film.characters;
+  const data = JSON.parse(body);
+  const characters = data.characters;
 
-    for (const url of characters) {
-      await new Promise((resolve) => {
-        https.get(url, (res) => {
-          let characterData = '';
-          res.on('data', (chunk) => { characterData += chunk; });
-          res.on('end', () => {
-            const character = JSON.parse(characterData);
-            console.log(character.name);
-            resolve();
-          });
-        });
+  const fetchCharacter = (url) => {
+    return new Promise((resolve, reject) => {
+      request(url, (err, res, bodyChar) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(JSON.parse(bodyChar).name);
+        }
       });
+    });
+  };
+
+  (async () => {
+    for (const url of characters) {
+      try {
+        const name = await fetchCharacter(url);
+        console.log(name);
+      } catch (err) {
+        console.error(err);
+      }
     }
-  });
-}).on('error', (err) => {
-  console.error(`Error: ${err.message}`);
+  })();
 });
